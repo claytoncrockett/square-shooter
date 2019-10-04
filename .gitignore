@@ -1,0 +1,4 @@
+/node_modules
+/node_modules*
+.prettierrc
+.cache
