@@ -354,6 +354,53 @@ function () {
 }();
 
 exports.default = Enemy;
+},{}],"src/score.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Score =
+/*#__PURE__*/
+function () {
+  function Score(gameWidth) {
+    _classCallCheck(this, Score);
+
+    this.width = 100;
+    this.height = 50;
+    this.currentScore = 0;
+    this.position = {
+      x: gameWidth - this.width - gameWidth / 8,
+      y: this.height
+    };
+  }
+
+  _createClass(Score, [{
+    key: "draw",
+    value: function draw(ctx) {
+      ctx.font = "36px dank mono";
+      ctx.fillStyle = "#0000ff";
+      ctx.fillText("Score: ".concat(this.currentScore), this.position.x, this.position.y);
+    }
+  }, {
+    key: "update",
+    value: function update(playerScore) {
+      this.currentScore = playerScore;
+    }
+  }]);
+
+  return Score;
+}();
+
+exports.default = Score;
 },{}],"src/main.js":[function(require,module,exports) {
 "use strict";
 
@@ -364,6 +411,8 @@ var _input = _interopRequireDefault(require("/src/input"));
 var _projectile = _interopRequireDefault(require("/src/projectile"));
 
 var _enemy = _interopRequireDefault(require("/src/enemy"));
+
+var _score = _interopRequireDefault(require("/src/score"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -376,6 +425,7 @@ var GAME_HEIGHT = 600; // game variables
 
 var spaceShip;
 var startingGameTime;
+var scoreBoard;
 var shootingAllowed = true;
 var paused = false;
 var enemySpawnInterval = 2000;
@@ -390,6 +440,7 @@ startGame(); // start the game
 
 function startGame() {
   spaceShip = new _spaceShip.default(GAME_WIDTH, GAME_HEIGHT);
+  scoreBoard = new _score.default(GAME_WIDTH);
   new _input.default(spaceShip, keysPressed, pauseGame, currentlyPaused);
   gameLoop();
 } //function for handling rules around bullets
@@ -451,7 +502,6 @@ function checkForCollisionWithEnemy(projectile) {
 
         if (enemyList[i].healthPoints === 0) {
           playerScore += enemyList[i].pointsForKilling;
-          console.log(playerScore);
           enemyList.splice(i, 1);
         }
 
@@ -530,12 +580,16 @@ function gameLoop(timestamp) {
 
     handleBullets(); // handle enemy updates
 
-    handleEnemies();
+    handleEnemies(); // canvas has no z index, to avoid using clipping methods, if score is drawn last it
+    // will appear above the other objects passing through it
+
+    scoreBoard.update(playerScore);
+    scoreBoard.draw(ctx);
   }
 
   requestAnimationFrame(gameLoop);
 }
-},{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js","/src/score":"src/score.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -563,7 +617,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49246" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59046" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -2,6 +2,7 @@ import SpaceShip from "/src/spaceShip";
 import InputHandler from "/src/input";
 import Projectile from "/src/projectile";
 import Enemy from "/src/enemy";
+import Score from "/src/score";
 
 // create canvas
 let canvas = document.getElementById("gameScreen");
@@ -14,6 +15,7 @@ const GAME_HEIGHT = 600;
 // game variables
 let spaceShip;
 let startingGameTime;
+let scoreBoard;
 let shootingAllowed = true;
 let paused = false;
 let enemySpawnInterval = 2000;
@@ -29,6 +31,7 @@ startGame();
 // start the game
 function startGame() {
   spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT);
+  scoreBoard = new Score(GAME_WIDTH);
   new InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused);
 
   gameLoop();
@@ -88,7 +91,6 @@ function checkForCollisionWithEnemy(projectile) {
         // if they are remove them from the enemy array and player gets points
         if (enemyList[i].healthPoints === 0) {
           playerScore += enemyList[i].pointsForKilling;
-          console.log(playerScore);
           enemyList.splice(i, 1);
         }
         return true;
@@ -169,6 +171,11 @@ function gameLoop(timestamp) {
 
     // handle enemy updates
     handleEnemies();
+
+    // canvas has no z index, to avoid using clipping methods, if score is drawn last it
+    // will appear above the other objects passing through it
+    scoreBoard.update(playerScore);
+    scoreBoard.draw(ctx);
   }
 
   requestAnimationFrame(gameLoop);
