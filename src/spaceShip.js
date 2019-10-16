@@ -1,5 +1,5 @@
 export default class SpaceShip {
-  constructor(gameWidth, gameHeight) {
+  constructor(gameWidth, gameHeight, paused) {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
     this.width = 70;

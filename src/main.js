@@ -12,23 +12,24 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 
 // game variables
-let projectileList = [];
-let enemyList = [];
-let keysPressed = {};
-let shootingAllowed = true;
 let spaceShip;
 let startingGameTime;
+let shootingAllowed = true;
+let paused = false;
 let enemySpawnInterval = 2000;
 let timeToSpawnNextEnemy = 2000;
 let reloadTime = 300;
 let playerScore = 0;
+let projectileList = [];
+let enemyList = [];
+let keysPressed = {};
 
 // triggers game start
 startGame();
 // start the game
 function startGame() {
   spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT);
-  new InputHandler(spaceShip, keysPressed);
+  new InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused);
 
   gameLoop();
 }
@@ -77,7 +78,7 @@ function checkForCollisionWithEnemy(projectile) {
     // check vertical values first, if there is no overlap there is no point in checking x values
     let enemyY = enemyList[i].position.y;
     let projectileY = projectile.position.y;
-    if (projectileY > enemyY && projectileY < enemyY + enemyList[i].height) {
+    if (projectileY + projectile.height > enemyY && projectileY < enemyY + enemyList[i].height) {
       let enemyX = enemyList[i].position.x;
       let projectileX = projectile.position.x;
       if (projectileX + projectile.width > enemyX && projectileX < enemyX + enemyList[i].width) {
@@ -122,15 +123,28 @@ let shootProjectile = () => {
 
 // Everytime gameloop runs it will check if enough time has ellapsed to spawn the next enemy
 let maybeSpawnEnemy = (currentTime, startingGameTime) => {
-  if (currentTime - startingGameTime > timeToSpawnNextEnemy) {
-    spawnEnemy();
-    timeToSpawnNextEnemy += enemySpawnInterval;
+  if (!paused) {
+    if (currentTime - startingGameTime > timeToSpawnNextEnemy) {
+      spawnEnemy();
+      timeToSpawnNextEnemy = currentTime + enemySpawnInterval;
+    }
   }
 };
 
+// add enemy to enemies list to spawn new enemy
 let spawnEnemy = () => {
   enemyList.push(new Enemy(GAME_WIDTH, GAME_HEIGHT));
 };
+
+// call to toggle paused state
+function pauseGame() {
+  paused = !paused;
+}
+
+// check if game is currently paused, use to give objects knowledge of pause state
+function currentlyPaused() {
+  return paused;
+}
 
 // main game loop
 function gameLoop(timestamp) {
@@ -141,17 +155,21 @@ function gameLoop(timestamp) {
     maybeSpawnEnemy(timestamp, startingGameTime);
   }
   // clear canvas between every render
-  ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  // handle spaceShip updates
-  spaceShip.draw(ctx);
-  spaceShip.update();
+  // don't do any of normal updates if game is currently paused
+  if (!paused) {
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  // handle bullet updates
-  handleBullets();
+    // handle spaceShip updates
+    spaceShip.draw(ctx);
+    spaceShip.update();
 
-  // handle enemy updates
-  handleEnemies();
+    // handle bullet updates
+    handleBullets();
+
+    // handle enemy updates
+    handleEnemies();
+  }
 
   requestAnimationFrame(gameLoop);
 }

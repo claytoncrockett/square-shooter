@@ -1,22 +1,27 @@
 export default class InputHandler {
-  constructor(spaceShip, keysPressed) {
+  constructor(spaceShip, keysPressed, pauseGame, currentlyPaused) {
     document.addEventListener("keydown", event => {
       switch (event.code) {
         case "Space":
           // so you can move while you shoot
           keysPressed[event.code] = event.type === "keydown";
           break;
+        case "KeyA":
         case "ArrowLeft":
-          spaceShip.moveLeft();
+          if (!currentlyPaused()) spaceShip.moveLeft();
           break;
+        case "KeyD":
         case "ArrowRight":
-          spaceShip.moveRight();
+          if (!currentlyPaused()) spaceShip.moveRight();
+          break;
+        case "KeyP":
+          pauseGame();
           break;
         default:
           break;
       }
     });
-    
+
     document.addEventListener("keyup", event => {
       switch (event.code) {
         case "Space":

@@ -134,7 +134,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var SpaceShip =
 /*#__PURE__*/
 function () {
-  function SpaceShip(gameWidth, gameHeight) {
+  function SpaceShip(gameWidth, gameHeight, paused) {
     _classCallCheck(this, SpaceShip);
 
     this.gameWidth = gameWidth;
@@ -202,7 +202,7 @@ exports.default = void 0;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var InputHandler = function InputHandler(spaceShip, keysPressed) {
+var InputHandler = function InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused) {
   _classCallCheck(this, InputHandler);
 
   document.addEventListener("keydown", function (event) {
@@ -212,12 +212,18 @@ var InputHandler = function InputHandler(spaceShip, keysPressed) {
         keysPressed[event.code] = event.type === "keydown";
         break;
 
+      case "KeyA":
       case "ArrowLeft":
-        spaceShip.moveLeft();
+        if (!currentlyPaused()) spaceShip.moveLeft();
         break;
 
+      case "KeyD":
       case "ArrowRight":
-        spaceShip.moveRight();
+        if (!currentlyPaused()) spaceShip.moveRight();
+        break;
+
+      case "KeyP":
+        pauseGame();
         break;
 
       default:
@@ -368,22 +374,23 @@ var ctx = canvas.getContext("2d"); // game constants
 var GAME_WIDTH = 800;
 var GAME_HEIGHT = 600; // game variables
 
-var projectileList = [];
-var enemyList = [];
-var keysPressed = {};
-var shootingAllowed = true;
 var spaceShip;
 var startingGameTime;
+var shootingAllowed = true;
+var paused = false;
 var enemySpawnInterval = 2000;
 var timeToSpawnNextEnemy = 2000;
 var reloadTime = 300;
-var playerScore = 0; // triggers game start
+var playerScore = 0;
+var projectileList = [];
+var enemyList = [];
+var keysPressed = {}; // triggers game start
 
 startGame(); // start the game
 
 function startGame() {
   spaceShip = new _spaceShip.default(GAME_WIDTH, GAME_HEIGHT);
-  new _input.default(spaceShip, keysPressed);
+  new _input.default(spaceShip, keysPressed, pauseGame, currentlyPaused);
   gameLoop();
 } //function for handling rules around bullets
 
@@ -433,7 +440,7 @@ function checkForCollisionWithEnemy(projectile) {
     var enemyY = enemyList[i].position.y;
     var projectileY = projectile.position.y;
 
-    if (projectileY > enemyY && projectileY < enemyY + enemyList[i].height) {
+    if (projectileY + projectile.height > enemyY && projectileY < enemyY + enemyList[i].height) {
       var enemyX = enemyList[i].position.x;
       var projectileX = projectile.position.x;
 
@@ -481,15 +488,28 @@ var shootProjectile = function shootProjectile() {
 
 
 var maybeSpawnEnemy = function maybeSpawnEnemy(currentTime, startingGameTime) {
-  if (currentTime - startingGameTime > timeToSpawnNextEnemy) {
-    spawnEnemy();
-    timeToSpawnNextEnemy += enemySpawnInterval;
+  if (!paused) {
+    if (currentTime - startingGameTime > timeToSpawnNextEnemy) {
+      spawnEnemy();
+      timeToSpawnNextEnemy = currentTime + enemySpawnInterval;
+    }
   }
-};
+}; // add enemy to enemies list to spawn new enemy
+
 
 var spawnEnemy = function spawnEnemy() {
   enemyList.push(new _enemy.default(GAME_WIDTH, GAME_HEIGHT));
-}; // main game loop
+}; // call to toggle paused state
+
+
+function pauseGame() {
+  paused = !paused;
+} // check if game is currently paused, use to give objects knowledge of pause state
+
+
+function currentlyPaused() {
+  return paused;
+} // main game loop
 
 
 function gameLoop(timestamp) {
@@ -499,16 +519,20 @@ function gameLoop(timestamp) {
   } else {
     maybeSpawnEnemy(timestamp, startingGameTime);
   } // clear canvas between every render
+  // don't do any of normal updates if game is currently paused
 
 
-  ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); // handle spaceShip updates
+  if (!paused) {
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); // handle spaceShip updates
 
-  spaceShip.draw(ctx);
-  spaceShip.update(); // handle bullet updates
+    spaceShip.draw(ctx);
+    spaceShip.update(); // handle bullet updates
 
-  handleBullets(); // handle enemy updates
+    handleBullets(); // handle enemy updates
 
-  handleEnemies();
+    handleEnemies();
+  }
+
   requestAnimationFrame(gameLoop);
 }
 },{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
@@ -539,7 +563,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49197" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49246" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
