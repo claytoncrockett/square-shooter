@@ -4,7 +4,7 @@ export default class Score {
     this.height = 50;
     this.currentScore = 0;
     this.position = {
-      x: gameWidth - this.width - gameWidth / 8,
+      x: gameWidth - this.width - gameWidth / 7,
       y: this.height
     };
   }

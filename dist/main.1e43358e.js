@@ -324,7 +324,9 @@ function () {
       x: this.initialX,
       y: this.initialY
     };
-  }
+  } // fire everytime enemy is supposed to take damage,
+  // for base enemy this will change their color depending on current health
+
 
   _createClass(Enemy, [{
     key: "takeDamage",
@@ -378,7 +380,7 @@ function () {
     this.height = 50;
     this.currentScore = 0;
     this.position = {
-      x: gameWidth - this.width - gameWidth / 8,
+      x: gameWidth - this.width - gameWidth / 7,
       y: this.height
     };
   }
@@ -401,6 +403,61 @@ function () {
 }();
 
 exports.default = Score;
+},{}],"src/powerup.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var PowerUp =
+/*#__PURE__*/
+function () {
+  function PowerUp(gameWidth) {
+    _classCallCheck(this, PowerUp);
+
+    this.radius = 20;
+    this.initialX = Math.random() * (gameWidth - this.radius);
+    this.initialY = -20;
+    this.healthPoints = 3;
+    this.velocity = 1;
+    this.position = {
+      x: this.initialX,
+      y: this.initialY
+    };
+  }
+
+  _createClass(PowerUp, [{
+    key: "takeDamage",
+    value: function takeDamage() {
+      this.healthPoints--;
+    }
+  }, {
+    key: "draw",
+    value: function draw(ctx) {
+      ctx.beginPath();
+      ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
+      ctx.fillStyle = "#ff00a9";
+      ctx.fill();
+    }
+  }, {
+    key: "update",
+    value: function update() {
+      this.position.y += this.velocity;
+    }
+  }]);
+
+  return PowerUp;
+}();
+
+exports.default = PowerUp;
 },{}],"src/main.js":[function(require,module,exports) {
 "use strict";
 
@@ -413,6 +470,8 @@ var _projectile = _interopRequireDefault(require("/src/projectile"));
 var _enemy = _interopRequireDefault(require("/src/enemy"));
 
 var _score = _interopRequireDefault(require("/src/score"));
+
+var _powerup = _interopRequireDefault(require("/src/powerup"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -430,9 +489,12 @@ var shootingAllowed = true;
 var paused = false;
 var enemySpawnInterval = 2000;
 var timeToSpawnNextEnemy = 2000;
+var powerUpSpawnInterval = 15000;
+var timeToSpawnNextPowerUp = 15000;
 var reloadTime = 300;
 var playerScore = 0;
 var projectileList = [];
+var powerUpList = [];
 var enemyList = [];
 var keysPressed = {}; // triggers game start
 
@@ -529,6 +591,24 @@ function handleEnemies() {
       enemyList[i].update();
     }
   }
+} // all things powerups go here
+
+
+function handlePowerups() {
+  if (powerUpList) {
+    for (var i = 0; i < powerUpList.length; i++) {
+      // if player doesn't kill powerup before it leaves screen.. it's gone!
+      if (powerUpList[i].position.y > GAME_HEIGHT) {
+        powerUpList.splice(i, 1);
+        i--;
+        continue;
+      }
+
+      console.log(powerUpList[i]);
+      powerUpList[i].draw(ctx);
+      powerUpList[i].update();
+    }
+  }
 } // bullet creation
 
 
@@ -544,11 +624,26 @@ var maybeSpawnEnemy = function maybeSpawnEnemy(currentTime, startingGameTime) {
       timeToSpawnNextEnemy = currentTime + enemySpawnInterval;
     }
   }
+}; // Check every game loop if it's time to spawn the next powerup
+
+
+var maybeSpawnPowerUp = function maybeSpawnPowerUp(currentTime, startingGameTime) {
+  if (!paused) {
+    if (currentTime - startingGameTime > timeToSpawnNextPowerUp) {
+      spawnPowerUp();
+      timeToSpawnNextPowerUp = currentTime + powerUpSpawnInterval;
+    }
+  }
 }; // add enemy to enemies list to spawn new enemy
 
 
 var spawnEnemy = function spawnEnemy() {
   enemyList.push(new _enemy.default(GAME_WIDTH, GAME_HEIGHT));
+}; // add powerup to list to spawn new powerup object
+
+
+var spawnPowerUp = function spawnPowerUp() {
+  powerUpList.push(new _powerup.default(GAME_WIDTH));
 }; // call to toggle paused state
 
 
@@ -568,6 +663,7 @@ function gameLoop(timestamp) {
     startingGameTime = timestamp;
   } else {
     maybeSpawnEnemy(timestamp, startingGameTime);
+    maybeSpawnPowerUp(timestamp, startingGameTime);
   } // clear canvas between every render
   // don't do any of normal updates if game is currently paused
 
@@ -580,7 +676,9 @@ function gameLoop(timestamp) {
 
     handleBullets(); // handle enemy updates
 
-    handleEnemies(); // canvas has no z index, to avoid using clipping methods, if score is drawn last it
+    handleEnemies(); // handle powerups
+
+    handlePowerups(); // canvas has no z index, to avoid using clipping methods, if score is drawn last it
     // will appear above the other objects passing through it
 
     scoreBoard.update(playerScore);
@@ -589,7 +687,7 @@ function gameLoop(timestamp) {
 
   requestAnimationFrame(gameLoop);
 }
-},{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js","/src/score":"src/score.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js","/src/score":"src/score.js","/src/powerup":"src/powerup.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -617,7 +715,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59046" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58572" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

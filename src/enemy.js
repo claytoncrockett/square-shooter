@@ -17,6 +17,8 @@ export default class Enemy {
     };
   }
 
+  // fire everytime enemy is supposed to take damage,
+  // for base enemy this will change their color depending on current health
   takeDamage() {
     this.healthPoints--;
     if (this.healthPoints < 2) {

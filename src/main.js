@@ -3,6 +3,7 @@ import InputHandler from "/src/input";
 import Projectile from "/src/projectile";
 import Enemy from "/src/enemy";
 import Score from "/src/score";
+import PowerUp from "/src/powerup";
 
 // create canvas
 let canvas = document.getElementById("gameScreen");
@@ -20,9 +21,12 @@ let shootingAllowed = true;
 let paused = false;
 let enemySpawnInterval = 2000;
 let timeToSpawnNextEnemy = 2000;
+let powerUpSpawnInterval = 15000;
+let timeToSpawnNextPowerUp = 15000;
 let reloadTime = 300;
 let playerScore = 0;
 let projectileList = [];
+let powerUpList = [];
 let enemyList = [];
 let keysPressed = {};
 
@@ -118,6 +122,24 @@ function handleEnemies() {
   }
 }
 
+// all things powerups go here
+function handlePowerups() {
+  if (powerUpList) {
+    for (let i = 0; i < powerUpList.length; i++) {
+      // if player doesn't kill powerup before it leaves screen.. it's gone!
+      if (powerUpList[i].position.y > GAME_HEIGHT) {
+        powerUpList.splice(i, 1);
+        i--;
+        continue;
+      }
+      console.log(powerUpList[i]);
+
+      powerUpList[i].draw(ctx);
+      powerUpList[i].update();
+    }
+  }
+}
+
 // bullet creation
 let shootProjectile = () => {
   projectileList.push(new Projectile(spaceShip));
@@ -133,9 +155,24 @@ let maybeSpawnEnemy = (currentTime, startingGameTime) => {
   }
 };
 
+// Check every game loop if it's time to spawn the next powerup
+let maybeSpawnPowerUp = (currentTime, startingGameTime) => {
+  if (!paused) {
+    if (currentTime - startingGameTime > timeToSpawnNextPowerUp) {
+      spawnPowerUp();
+      timeToSpawnNextPowerUp = currentTime + powerUpSpawnInterval;
+    }
+  }
+};
+
 // add enemy to enemies list to spawn new enemy
 let spawnEnemy = () => {
   enemyList.push(new Enemy(GAME_WIDTH, GAME_HEIGHT));
+};
+
+// add powerup to list to spawn new powerup object
+let spawnPowerUp = () => {
+  powerUpList.push(new PowerUp(GAME_WIDTH));
 };
 
 // call to toggle paused state
@@ -155,6 +192,7 @@ function gameLoop(timestamp) {
     startingGameTime = timestamp;
   } else {
     maybeSpawnEnemy(timestamp, startingGameTime);
+    maybeSpawnPowerUp(timestamp, startingGameTime);
   }
   // clear canvas between every render
 
@@ -171,6 +209,9 @@ function gameLoop(timestamp) {
 
     // handle enemy updates
     handleEnemies();
+
+    // handle powerups
+    handlePowerups();
 
     // canvas has no z index, to avoid using clipping methods, if score is drawn last it
     // will appear above the other objects passing through it
