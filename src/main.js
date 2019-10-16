@@ -20,7 +20,7 @@ let spaceShip;
 let startingGameTime;
 let enemySpawnInterval = 2000;
 let timeToSpawnNextEnemy = 2000;
-let reloadTime = 100;
+let reloadTime = 300;
 let playerScore = 0;
 
 // triggers game start
@@ -50,6 +50,8 @@ function handleBullets() {
 
   if (projectileList) {
     for (let i = 0; i < projectileList.length; i++) {
+      // if collision with an enemy is detected, this projectile will be removed from
+      // the projectileList to remove it from the game.
       if (checkForCollisionWithEnemy(projectileList[i])) {
         projectileList.splice(i, 1);
         i--;
@@ -78,13 +80,14 @@ function checkForCollisionWithEnemy(projectile) {
     if (projectileY > enemyY && projectileY < enemyY + enemyList[i].height) {
       let enemyX = enemyList[i].position.x;
       let projectileX = projectile.position.x;
-      if (projectileX > enemyX && projectileX < enemyX + enemyList[i].width) {
+      if (projectileX + projectile.width > enemyX && projectileX < enemyX + enemyList[i].width) {
         // if a collision is detected, lower that enemies health by 1
         enemyList[i].takeDamage();
         // after health is lowered, check if that enemy is out of health,
         // if they are remove them from the enemy array and player gets points
         if (enemyList[i].healthPoints === 0) {
           playerScore += enemyList[i].pointsForKilling;
+          console.log(playerScore);
           enemyList.splice(i, 1);
         }
         return true;

@@ -310,7 +310,7 @@ function () {
 
     this.initialX = Math.random() * (gameWidth - this.width);
     this.initialY = -20;
-    this.healthPoints = 9;
+    this.healthPoints = 3;
     this.pointsForKilling = 5;
     this.currentColor = "#32CD32";
     this.velocity = 1;
@@ -325,9 +325,9 @@ function () {
     value: function takeDamage() {
       this.healthPoints--;
 
-      if (this.healthPoints < 4) {
+      if (this.healthPoints < 2) {
         this.currentColor = "#ff0000";
-      } else if (this.healthPoints < 7) {
+      } else if (this.healthPoints < 3) {
         this.currentColor = "#ffff00";
       }
     }
@@ -376,7 +376,7 @@ var spaceShip;
 var startingGameTime;
 var enemySpawnInterval = 2000;
 var timeToSpawnNextEnemy = 2000;
-var reloadTime = 100;
+var reloadTime = 300;
 var playerScore = 0; // triggers game start
 
 startGame(); // start the game
@@ -404,6 +404,8 @@ function handleBullets() {
 
   if (projectileList) {
     for (var i = 0; i < projectileList.length; i++) {
+      // if collision with an enemy is detected, this projectile will be removed from
+      // the projectileList to remove it from the game.
       if (checkForCollisionWithEnemy(projectileList[i])) {
         projectileList.splice(i, 1);
         i--;
@@ -435,13 +437,14 @@ function checkForCollisionWithEnemy(projectile) {
       var enemyX = enemyList[i].position.x;
       var projectileX = projectile.position.x;
 
-      if (projectileX > enemyX && projectileX < enemyX + enemyList[i].width) {
+      if (projectileX + projectile.width > enemyX && projectileX < enemyX + enemyList[i].width) {
         // if a collision is detected, lower that enemies health by 1
         enemyList[i].takeDamage(); // after health is lowered, check if that enemy is out of health,
         // if they are remove them from the enemy array and player gets points
 
         if (enemyList[i].healthPoints === 0) {
           playerScore += enemyList[i].pointsForKilling;
+          console.log(playerScore);
           enemyList.splice(i, 1);
         }
 
@@ -536,7 +539,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58855" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49197" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
