@@ -4,6 +4,7 @@ import Projectile from "/src/projectile";
 import Enemy from "/src/enemy";
 import Score from "/src/score";
 import PowerUp from "/src/powerup";
+import GameClock from "/src/gameClock";
 
 // create canvas
 let canvas = document.getElementById("gameScreen");
@@ -17,14 +18,17 @@ const GAME_HEIGHT = 600;
 let spaceShip;
 let startingGameTime;
 let scoreBoard;
+let gameClock;
 let shootingAllowed = true;
 let paused = false;
-let enemySpawnInterval = 2000;
-let timeToSpawnNextEnemy = 2000;
+let enemySpawnInterval = 1500;
+let timeToSpawnNextEnemy = 1500;
 let powerUpSpawnInterval = 15000;
 let timeToSpawnNextPowerUp = 15000;
 let reloadTime = 300;
 let playerScore = 0;
+let prevFrameGameClock = 0;
+let currentGameTime = 0;
 let projectileList = [];
 let powerUpList = [];
 let enemyList = [];
@@ -36,6 +40,7 @@ startGame();
 function startGame() {
   spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT);
   scoreBoard = new Score(GAME_WIDTH);
+  gameClock = new GameClock(GAME_WIDTH);
   new InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused);
 
   gameLoop();
@@ -132,7 +137,6 @@ function handlePowerups() {
         i--;
         continue;
       }
-      console.log(powerUpList[i]);
 
       powerUpList[i].draw(ctx);
       powerUpList[i].update();
@@ -146,21 +150,21 @@ let shootProjectile = () => {
 };
 
 // Everytime gameloop runs it will check if enough time has ellapsed to spawn the next enemy
-let maybeSpawnEnemy = (currentTime, startingGameTime) => {
+let maybeSpawnEnemy = () => {
   if (!paused) {
-    if (currentTime - startingGameTime > timeToSpawnNextEnemy) {
+    if (currentGameTime - enemySpawnInterval > timeToSpawnNextEnemy) {
       spawnEnemy();
-      timeToSpawnNextEnemy = currentTime + enemySpawnInterval;
+      timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval;
     }
   }
 };
 
 // Check every game loop if it's time to spawn the next powerup
-let maybeSpawnPowerUp = (currentTime, startingGameTime) => {
+let maybeSpawnPowerUp = () => {
   if (!paused) {
-    if (currentTime - startingGameTime > timeToSpawnNextPowerUp) {
+    if (currentGameTime - powerUpSpawnInterval > timeToSpawnNextPowerUp) {
       spawnPowerUp();
-      timeToSpawnNextPowerUp = currentTime + powerUpSpawnInterval;
+      timeToSpawnNextPowerUp = currentGameTime + powerUpSpawnInterval;
     }
   }
 };
@@ -191,14 +195,18 @@ function gameLoop(timestamp) {
   if (!startingGameTime) {
     startingGameTime = timestamp;
   } else {
-    maybeSpawnEnemy(timestamp, startingGameTime);
-    maybeSpawnPowerUp(timestamp, startingGameTime);
+    maybeSpawnEnemy();
+    maybeSpawnPowerUp();
   }
   // clear canvas between every render
+
+  // int for faster processing of gameclock
+  timestamp = Math.floor(timestamp);
 
   // don't do any of normal updates if game is currently paused
   if (!paused) {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    if (timestamp) currentGameTime += timestamp - prevFrameGameClock;
 
     // handle spaceShip updates
     spaceShip.draw(ctx);
@@ -217,7 +225,12 @@ function gameLoop(timestamp) {
     // will appear above the other objects passing through it
     scoreBoard.update(playerScore);
     scoreBoard.draw(ctx);
-  }
 
+    // update game clock, also put this below enemies/projectiles and things so it
+    // basically has the highest z index
+    gameClock.update(currentGameTime);
+    gameClock.draw(ctx);
+  }
+  if (timestamp) prevFrameGameClock = timestamp;
   requestAnimationFrame(gameLoop);
 }

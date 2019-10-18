@@ -458,6 +458,62 @@ function () {
 }();
 
 exports.default = PowerUp;
+},{}],"src/gameClock.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var GameClock =
+/*#__PURE__*/
+function () {
+  function GameClock() {
+    _classCallCheck(this, GameClock);
+
+    this.width = 75;
+    this.height = 40;
+    this.currentTime = "0";
+    this.position = {
+      x: 20,
+      y: this.height
+    };
+  }
+
+  _createClass(GameClock, [{
+    key: "draw",
+    value: function draw(ctx) {
+      ctx.font = "28px dank mono";
+      ctx.fillStyle = "#000000";
+      ctx.fillText("".concat(this.currentTime), this.position.x, this.position.y);
+    }
+  }, {
+    key: "update",
+    value: function update(gameTime) {
+      // some doctoring to take milliseconds and turn them into a nice format to display to the user
+      // will just make gameclock format the seconds and milliseconds - maybe will add minutes in future
+      var gameTimeToDisplay = "";
+      var numberArray = gameTime.toString().split("");
+
+      for (var i = 0; i < numberArray.length - 1; i++) {
+        if (i === numberArray.length - 3) gameTimeToDisplay += ".".concat(numberArray[i]);else gameTimeToDisplay += numberArray[i];
+      }
+
+      this.currentTime = gameTimeToDisplay;
+    }
+  }]);
+
+  return GameClock;
+}();
+
+exports.default = GameClock;
 },{}],"src/main.js":[function(require,module,exports) {
 "use strict";
 
@@ -473,6 +529,8 @@ var _score = _interopRequireDefault(require("/src/score"));
 
 var _powerup = _interopRequireDefault(require("/src/powerup"));
 
+var _gameClock = _interopRequireDefault(require("/src/gameClock"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // create canvas
@@ -485,14 +543,17 @@ var GAME_HEIGHT = 600; // game variables
 var spaceShip;
 var startingGameTime;
 var scoreBoard;
+var gameClock;
 var shootingAllowed = true;
 var paused = false;
-var enemySpawnInterval = 2000;
-var timeToSpawnNextEnemy = 2000;
+var enemySpawnInterval = 1500;
+var timeToSpawnNextEnemy = 1500;
 var powerUpSpawnInterval = 15000;
 var timeToSpawnNextPowerUp = 15000;
 var reloadTime = 300;
 var playerScore = 0;
+var prevFrameGameClock = 0;
+var currentGameTime = 0;
 var projectileList = [];
 var powerUpList = [];
 var enemyList = [];
@@ -503,6 +564,7 @@ startGame(); // start the game
 function startGame() {
   spaceShip = new _spaceShip.default(GAME_WIDTH, GAME_HEIGHT);
   scoreBoard = new _score.default(GAME_WIDTH);
+  gameClock = new _gameClock.default(GAME_WIDTH);
   new _input.default(spaceShip, keysPressed, pauseGame, currentlyPaused);
   gameLoop();
 } //function for handling rules around bullets
@@ -604,7 +666,6 @@ function handlePowerups() {
         continue;
       }
 
-      console.log(powerUpList[i]);
       powerUpList[i].draw(ctx);
       powerUpList[i].update();
     }
@@ -617,21 +678,21 @@ var shootProjectile = function shootProjectile() {
 }; // Everytime gameloop runs it will check if enough time has ellapsed to spawn the next enemy
 
 
-var maybeSpawnEnemy = function maybeSpawnEnemy(currentTime, startingGameTime) {
+var maybeSpawnEnemy = function maybeSpawnEnemy() {
   if (!paused) {
-    if (currentTime - startingGameTime > timeToSpawnNextEnemy) {
+    if (currentGameTime - enemySpawnInterval > timeToSpawnNextEnemy) {
       spawnEnemy();
-      timeToSpawnNextEnemy = currentTime + enemySpawnInterval;
+      timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval;
     }
   }
 }; // Check every game loop if it's time to spawn the next powerup
 
 
-var maybeSpawnPowerUp = function maybeSpawnPowerUp(currentTime, startingGameTime) {
+var maybeSpawnPowerUp = function maybeSpawnPowerUp() {
   if (!paused) {
-    if (currentTime - startingGameTime > timeToSpawnNextPowerUp) {
+    if (currentGameTime - powerUpSpawnInterval > timeToSpawnNextPowerUp) {
       spawnPowerUp();
-      timeToSpawnNextPowerUp = currentTime + powerUpSpawnInterval;
+      timeToSpawnNextPowerUp = currentGameTime + powerUpSpawnInterval;
     }
   }
 }; // add enemy to enemies list to spawn new enemy
@@ -662,14 +723,17 @@ function gameLoop(timestamp) {
   if (!startingGameTime) {
     startingGameTime = timestamp;
   } else {
-    maybeSpawnEnemy(timestamp, startingGameTime);
-    maybeSpawnPowerUp(timestamp, startingGameTime);
+    maybeSpawnEnemy();
+    maybeSpawnPowerUp();
   } // clear canvas between every render
-  // don't do any of normal updates if game is currently paused
+  // int for faster processing of gameclock
 
+
+  timestamp = Math.floor(timestamp); // don't do any of normal updates if game is currently paused
 
   if (!paused) {
-    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); // handle spaceShip updates
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    if (timestamp) currentGameTime += timestamp - prevFrameGameClock; // handle spaceShip updates
 
     spaceShip.draw(ctx);
     spaceShip.update(); // handle bullet updates
@@ -682,12 +746,17 @@ function gameLoop(timestamp) {
     // will appear above the other objects passing through it
 
     scoreBoard.update(playerScore);
-    scoreBoard.draw(ctx);
+    scoreBoard.draw(ctx); // update game clock, also put this below enemies/projectiles and things so it
+    // basically has the highest z index
+
+    gameClock.update(currentGameTime);
+    gameClock.draw(ctx);
   }
 
+  if (timestamp) prevFrameGameClock = timestamp;
   requestAnimationFrame(gameLoop);
 }
-},{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js","/src/score":"src/score.js","/src/powerup":"src/powerup.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"/src/spaceShip":"src/spaceShip.js","/src/input":"src/input.js","/src/projectile":"src/projectile.js","/src/enemy":"src/enemy.js","/src/score":"src/score.js","/src/powerup":"src/powerup.js","/src/gameClock":"src/gameClock.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -715,7 +784,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49436" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50761" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
