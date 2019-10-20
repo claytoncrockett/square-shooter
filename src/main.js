@@ -21,10 +21,10 @@ let scoreBoard;
 let gameClock;
 let shootingAllowed = true;
 let paused = false;
-let enemySpawnInterval = 1500;
-let timeToSpawnNextEnemy = 1500;
-let powerUpSpawnInterval = 15000;
-let timeToSpawnNextPowerUp = 15000;
+let enemySpawnInterval = 5000;
+let timeToSpawnNextEnemy = 3000;
+let powerUpSpawnInterval = 30000;
+let timeToSpawnNextPowerUp = 30000;
 let reloadTime = 300;
 let playerScore = 0;
 let prevFrameGameClock = 0;
@@ -65,11 +65,25 @@ function handleBullets() {
     for (let i = 0; i < projectileList.length; i++) {
       // if collision with an enemy is detected, this projectile will be removed from
       // the projectileList to remove it from the game.
+      let tempI = i;
       if (checkForCollisionWithEnemy(projectileList[i])) {
         projectileList.splice(i, 1);
         i--;
         continue;
       }
+      if (powerUpList.length > 0) {
+        for (let j = 0; j < powerUpList.length; j++) {
+          if (checkForCollisionCircleSquare(powerUpList[0], projectileList[i])) {
+            powerUpList.splice(j, 1);
+            reloadTime *= 0.5;
+            projectileList.splice(i, 1);
+            i--;
+          }
+        }
+      }
+      // this line handles a bug where sometimes a projectile can be spliced out of the
+      // array without resetting the loop causing it to not exist below.
+      if (tempI !== i) continue;
 
       // this if statement is the memory cleanup of the bullet list
       // whenever a bullet leaves the screen it will be cleaned up from arr
@@ -104,6 +118,27 @@ function checkForCollisionWithEnemy(projectile) {
         }
         return true;
       }
+    }
+  }
+  return false;
+}
+
+// currently treating circle hitbox like a square, not doing the advanced math to look for hits on the arc
+// this is still a TODO
+function checkForCollisionCircleSquare(circle, square) {
+  const squareTop = square.position.y;
+  const squareBottom = squareTop + square.height;
+  const circleCenterY = circle.position.y;
+  const circleTop = circleCenterY - circle.radius;
+  const circleBottom = circleCenterY + circle.radius;
+  if (squareBottom > circleTop && squareTop < circleBottom) {
+    const circleCenterX = circle.position.x;
+    const circleLeft = circleCenterX - circle.radius;
+    const circleRight = circleCenterX + circle.radius;
+    const squareLeft = square.position.x;
+    const squareRight = square.position.x + square.width;
+    if (squareLeft < circleRight && squareRight > circleLeft) {
+      return true;
     }
   }
   return false;
@@ -152,9 +187,13 @@ let shootProjectile = () => {
 // Everytime gameloop runs it will check if enough time has ellapsed to spawn the next enemy
 let maybeSpawnEnemy = () => {
   if (!paused) {
-    if (currentGameTime - enemySpawnInterval > timeToSpawnNextEnemy) {
+    if (currentGameTime > timeToSpawnNextEnemy) {
       spawnEnemy();
       timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval;
+      // slightly spawn enemies faster every time up to a limit
+      if (enemySpawnInterval > 2000) {
+        enemySpawnInterval *= 0.95;
+      }
     }
   }
 };
@@ -162,7 +201,7 @@ let maybeSpawnEnemy = () => {
 // Check every game loop if it's time to spawn the next powerup
 let maybeSpawnPowerUp = () => {
   if (!paused) {
-    if (currentGameTime - powerUpSpawnInterval > timeToSpawnNextPowerUp) {
+    if (currentGameTime > timeToSpawnNextPowerUp) {
       spawnPowerUp();
       timeToSpawnNextPowerUp = currentGameTime + powerUpSpawnInterval;
     }

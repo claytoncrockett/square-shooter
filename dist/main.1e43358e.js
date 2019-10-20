@@ -546,10 +546,10 @@ var scoreBoard;
 var gameClock;
 var shootingAllowed = true;
 var paused = false;
-var enemySpawnInterval = 1500;
-var timeToSpawnNextEnemy = 1500;
-var powerUpSpawnInterval = 15000;
-var timeToSpawnNextPowerUp = 15000;
+var enemySpawnInterval = 5000;
+var timeToSpawnNextEnemy = 3000;
+var powerUpSpawnInterval = 30000;
+var timeToSpawnNextPowerUp = 30000;
 var reloadTime = 300;
 var playerScore = 0;
 var prevFrameGameClock = 0;
@@ -588,13 +588,29 @@ function handleBullets() {
     for (var i = 0; i < projectileList.length; i++) {
       // if collision with an enemy is detected, this projectile will be removed from
       // the projectileList to remove it from the game.
+      var tempI = i;
+
       if (checkForCollisionWithEnemy(projectileList[i])) {
         projectileList.splice(i, 1);
         i--;
         continue;
-      } // this if statement is the memory cleanup of the bullet list
-      // whenever a bullet leaves the screen it will be cleaned up from arr
+      }
 
+      if (powerUpList.length > 0) {
+        for (var j = 0; j < powerUpList.length; j++) {
+          if (checkForCollisionCircleSquare(powerUpList[0], projectileList[i])) {
+            powerUpList.splice(j, 1);
+            reloadTime *= 0.5;
+            projectileList.splice(i, 1);
+            i--;
+          }
+        }
+      } // this line handles a bug where sometimes a projectile can be spliced out of the
+      // array without resetting the loop causing it to not exist below.
+
+
+      if (tempI !== i) continue; // this if statement is the memory cleanup of the bullet list
+      // whenever a bullet leaves the screen it will be cleaned up from arr
 
       if (projectileList[i].position.y < 0) {
         projectileList.splice(i, 1);
@@ -631,6 +647,30 @@ function checkForCollisionWithEnemy(projectile) {
 
         return true;
       }
+    }
+  }
+
+  return false;
+} // currently treating circle hitbox like a square, not doing the advanced math to look for hits on the arc
+// this is still a TODO
+
+
+function checkForCollisionCircleSquare(circle, square) {
+  var squareTop = square.position.y;
+  var squareBottom = squareTop + square.height;
+  var circleCenterY = circle.position.y;
+  var circleTop = circleCenterY - circle.radius;
+  var circleBottom = circleCenterY + circle.radius;
+
+  if (squareBottom > circleTop && squareTop < circleBottom) {
+    var circleCenterX = circle.position.x;
+    var circleLeft = circleCenterX - circle.radius;
+    var circleRight = circleCenterX + circle.radius;
+    var squareLeft = square.position.x;
+    var squareRight = square.position.x + square.width;
+
+    if (squareLeft < circleRight && squareRight > circleLeft) {
+      return true;
     }
   }
 
@@ -680,9 +720,13 @@ var shootProjectile = function shootProjectile() {
 
 var maybeSpawnEnemy = function maybeSpawnEnemy() {
   if (!paused) {
-    if (currentGameTime - enemySpawnInterval > timeToSpawnNextEnemy) {
+    if (currentGameTime > timeToSpawnNextEnemy) {
       spawnEnemy();
-      timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval;
+      timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval; // slightly spawn enemies faster every time up to a limit
+
+      if (enemySpawnInterval > 2000) {
+        enemySpawnInterval *= 0.95;
+      }
     }
   }
 }; // Check every game loop if it's time to spawn the next powerup
@@ -690,7 +734,7 @@ var maybeSpawnEnemy = function maybeSpawnEnemy() {
 
 var maybeSpawnPowerUp = function maybeSpawnPowerUp() {
   if (!paused) {
-    if (currentGameTime - powerUpSpawnInterval > timeToSpawnNextPowerUp) {
+    if (currentGameTime > timeToSpawnNextPowerUp) {
       spawnPowerUp();
       timeToSpawnNextPowerUp = currentGameTime + powerUpSpawnInterval;
     }
@@ -784,7 +828,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50761" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62411" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
