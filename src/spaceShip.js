@@ -1,13 +1,15 @@
 export default class SpaceShip {
-  constructor(gameWidth, gameHeight, paused) {
+  constructor(gameWidth, gameHeight, gameOver) {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
+    this.gameOver = gameOver;
     this.width = 70;
     this.height = 20;
     this.xSpeed = 7;
     this.initialX = gameWidth / 2 - this.width / 2;
     this.initialY = gameHeight - this.height - 10;
     this.horizontalVelocity = 0;
+    this.health = 3;
 
     this.position = {
       x: this.initialX,
@@ -29,6 +31,11 @@ export default class SpaceShip {
     if (this.position.x < this.gameWidth - this.width) {
       this.horizontalVelocity = this.xSpeed;
     }
+  }
+
+  takeDamage() {
+    this.health--;
+    if (this.health === 0) this.gameOver();
   }
 
   resetPosition() {

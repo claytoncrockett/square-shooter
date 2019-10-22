@@ -13,6 +13,33 @@ let ctx = canvas.getContext("2d");
 // game constants
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
+const FASTEST_BASIC_ENEMY_SPAWN_RATE = 1000;
+
+const initialGameVariables = {
+  // game variables
+  shootingAllowed: true,
+  paused: false,
+  enemySpawnInterval: 5000,
+  timeToSpawnNextEnemy: 3000,
+  powerUpSpawnInterval: 30000,
+  timeToSpawnNextPowerUp: 30000,
+  reloadTime: 500,
+  playerScore: 0,
+  prevFrameGameClock: 0,
+  currentGameTime: 0,
+  projectileList: [],
+  powerUpList: [],
+  enemyList: [],
+  spaceShip: {},
+  startingGameTime: {},
+  scoreBoard: {},
+  gameClock: {},
+  keysPressed: {}
+};
+
+let gameStateVariables = {
+  ...initialGameVariables
+};
 
 // game variables
 let spaceShip;
@@ -25,7 +52,7 @@ let enemySpawnInterval = 5000;
 let timeToSpawnNextEnemy = 3000;
 let powerUpSpawnInterval = 30000;
 let timeToSpawnNextPowerUp = 30000;
-let reloadTime = 300;
+let reloadTime = 500;
 let playerScore = 0;
 let prevFrameGameClock = 0;
 let currentGameTime = 0;
@@ -38,7 +65,7 @@ let keysPressed = {};
 startGame();
 // start the game
 function startGame() {
-  spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT);
+  spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT, gameOver);
   scoreBoard = new Score(GAME_WIDTH);
   gameClock = new GameClock(GAME_WIDTH);
   new InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused);
@@ -152,6 +179,7 @@ function handleEnemies() {
     for (let i = 0; i < enemyList.length; i++) {
       if (enemyList[i].position.y > GAME_HEIGHT) {
         enemyList.splice(i, 1);
+        spaceShip.takeDamage();
         i--;
         continue;
       }
@@ -191,7 +219,7 @@ let maybeSpawnEnemy = () => {
       spawnEnemy();
       timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval;
       // slightly spawn enemies faster every time up to a limit
-      if (enemySpawnInterval > 2000) {
+      if (enemySpawnInterval > FASTEST_BASIC_ENEMY_SPAWN_RATE) {
         enemySpawnInterval *= 0.95;
       }
     }
@@ -217,6 +245,11 @@ let spawnEnemy = () => {
 let spawnPowerUp = () => {
   powerUpList.push(new PowerUp(GAME_WIDTH));
 };
+
+// trigger when game ending condition happens
+function gameOver() {
+  paused = !paused;
+}
 
 // call to toggle paused state
 function pauseGame() {

@@ -134,17 +134,19 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var SpaceShip =
 /*#__PURE__*/
 function () {
-  function SpaceShip(gameWidth, gameHeight, paused) {
+  function SpaceShip(gameWidth, gameHeight, gameOver) {
     _classCallCheck(this, SpaceShip);
 
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
+    this.gameOver = gameOver;
     this.width = 70;
     this.height = 20;
     this.xSpeed = 7;
     this.initialX = gameWidth / 2 - this.width / 2;
     this.initialY = gameHeight - this.height - 10;
     this.horizontalVelocity = 0;
+    this.health = 3;
     this.position = {
       x: this.initialX,
       y: this.initialY
@@ -170,6 +172,12 @@ function () {
       if (this.position.x < this.gameWidth - this.width) {
         this.horizontalVelocity = this.xSpeed;
       }
+    }
+  }, {
+    key: "takeDamage",
+    value: function takeDamage() {
+      this.health--;
+      if (this.health === 0) this.gameOver();
     }
   }, {
     key: "resetPosition",
@@ -533,12 +541,43 @@ var _gameClock = _interopRequireDefault(require("/src/gameClock"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 // create canvas
 var canvas = document.getElementById("gameScreen");
 var ctx = canvas.getContext("2d"); // game constants
 
 var GAME_WIDTH = 800;
-var GAME_HEIGHT = 600; // game variables
+var GAME_HEIGHT = 600;
+var FASTEST_BASIC_ENEMY_SPAWN_RATE = 1000;
+var initialGameVariables = {
+  // game variables
+  shootingAllowed: true,
+  paused: false,
+  enemySpawnInterval: 5000,
+  timeToSpawnNextEnemy: 3000,
+  powerUpSpawnInterval: 30000,
+  timeToSpawnNextPowerUp: 30000,
+  reloadTime: 500,
+  playerScore: 0,
+  prevFrameGameClock: 0,
+  currentGameTime: 0,
+  projectileList: [],
+  powerUpList: [],
+  enemyList: [],
+  spaceShip: {},
+  startingGameTime: {},
+  scoreBoard: {},
+  gameClock: {},
+  keysPressed: {}
+};
+
+var gameStateVariables = _objectSpread({}, initialGameVariables); // game variables
+
 
 var spaceShip;
 var startingGameTime;
@@ -550,7 +589,7 @@ var enemySpawnInterval = 5000;
 var timeToSpawnNextEnemy = 3000;
 var powerUpSpawnInterval = 30000;
 var timeToSpawnNextPowerUp = 30000;
-var reloadTime = 300;
+var reloadTime = 500;
 var playerScore = 0;
 var prevFrameGameClock = 0;
 var currentGameTime = 0;
@@ -562,7 +601,7 @@ var keysPressed = {}; // triggers game start
 startGame(); // start the game
 
 function startGame() {
-  spaceShip = new _spaceShip.default(GAME_WIDTH, GAME_HEIGHT);
+  spaceShip = new _spaceShip.default(GAME_WIDTH, GAME_HEIGHT, gameOver);
   scoreBoard = new _score.default(GAME_WIDTH);
   gameClock = new _gameClock.default(GAME_WIDTH);
   new _input.default(spaceShip, keysPressed, pauseGame, currentlyPaused);
@@ -685,6 +724,7 @@ function handleEnemies() {
     for (var i = 0; i < enemyList.length; i++) {
       if (enemyList[i].position.y > GAME_HEIGHT) {
         enemyList.splice(i, 1);
+        spaceShip.takeDamage();
         i--;
         continue;
       }
@@ -724,7 +764,7 @@ var maybeSpawnEnemy = function maybeSpawnEnemy() {
       spawnEnemy();
       timeToSpawnNextEnemy = currentGameTime + enemySpawnInterval; // slightly spawn enemies faster every time up to a limit
 
-      if (enemySpawnInterval > 2000) {
+      if (enemySpawnInterval > FASTEST_BASIC_ENEMY_SPAWN_RATE) {
         enemySpawnInterval *= 0.95;
       }
     }
@@ -749,7 +789,12 @@ var spawnEnemy = function spawnEnemy() {
 
 var spawnPowerUp = function spawnPowerUp() {
   powerUpList.push(new _powerup.default(GAME_WIDTH));
-}; // call to toggle paused state
+}; // trigger when game ending condition happens
+
+
+function gameOver() {
+  paused = !paused;
+} // call to toggle paused state
 
 
 function pauseGame() {
@@ -828,7 +873,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62411" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59390" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
