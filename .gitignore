@@ -4,4 +4,4 @@
 
 # Parcel related files
 .cache
-dist
+dist/*
