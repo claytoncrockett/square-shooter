@@ -5,7 +5,7 @@ export default class SpaceShip {
     this.gameOver = gameOver;
     this.width = 70;
     this.height = 20;
-    this.xSpeed = 7;
+    this.xSpeed = 10;
     this.initialX = gameWidth / 2 - this.width / 2;
     this.initialY = gameHeight - this.height - 10;
     this.horizontalVelocity = 0;
@@ -48,6 +48,7 @@ export default class SpaceShip {
 
   update() {
     this.position.x += this.horizontalVelocity;
-    if (this.position.x < 0 || this.position.x > this.gameWidth - this.width) this.horizontalVelocity = 0;
+    if (this.position.x < 0 || this.position.x > this.gameWidth - this.width)
+      this.horizontalVelocity = 0;
   }
 }

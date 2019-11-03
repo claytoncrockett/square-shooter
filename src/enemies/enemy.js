@@ -3,13 +3,13 @@ export default class Enemy {
     this.width = 60;
     this.height = 60;
     // spawn enemy in random x position above the screen
-    this.initialX = Math.random() * (gameWidth - this.width);
+    this.initialX = Math.floor(Math.random() * (gameWidth - this.width));
     this.initialY = -20;
     this.healthPoints = 3;
     this.pointsForKilling = 5;
     this.currentColor = "#32CD32";
 
-    this.velocity = 1;
+    this.velocity = 2;
 
     this.position = {
       x: this.initialX,

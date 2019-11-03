@@ -11,8 +11,12 @@ export default class Score {
 
   draw(ctx) {
     ctx.font = "36px dank mono";
-    ctx.fillStyle = "#0000ff";
-    ctx.fillText(`Score: ${this.currentScore}`, this.position.x, this.position.y);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(
+      `Score: ${this.currentScore}`,
+      this.position.x,
+      this.position.y
+    );
   }
 
   update(playerScore) {

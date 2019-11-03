@@ -11,7 +11,7 @@ export default class GameClock {
 
   draw(ctx) {
     ctx.font = "28px dank mono";
-    ctx.fillStyle = "#000000";
+    ctx.fillStyle = "#ffffff";
     ctx.fillText(`${this.currentTime}`, this.position.x, this.position.y);
   }
 
@@ -21,7 +21,8 @@ export default class GameClock {
     let gameTimeToDisplay = "";
     const numberArray = gameTime.toString().split("");
     for (let i = 0; i < numberArray.length - 1; i++) {
-      if (i === numberArray.length - 3) gameTimeToDisplay += `.${numberArray[i]}`;
+      if (i === numberArray.length - 3)
+        gameTimeToDisplay += `.${numberArray[i]}`;
       else gameTimeToDisplay += numberArray[i];
     }
     this.currentTime = gameTimeToDisplay;

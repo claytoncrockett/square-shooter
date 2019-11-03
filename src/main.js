@@ -1,10 +1,11 @@
-import SpaceShip from "/src/spaceShip";
-import InputHandler from "/src/input";
-import Projectile from "/src/projectile";
-import Enemy from "/src/enemy";
-import Score from "/src/score";
-import PowerUp from "/src/powerup";
-import GameClock from "/src/gameClock";
+import SpaceShip from "/src/spaceship/spaceShip";
+import InputHandler from "/src/input/input";
+import Projectile from "/src/projectiles/projectile";
+import Enemy from "/src/enemies/enemy";
+import Score from "/src/interface/score";
+import PowerUp from "/src/powerups/powerup";
+import GameClock from "/src/interface/gameClock";
+import Star from "./stars/star";
 
 // create canvas
 let canvas = document.getElementById("gameScreen");
@@ -34,7 +35,8 @@ const initialGameVariables = {
   startingGameTime: {},
   scoreBoard: {},
   gameClock: {},
-  keysPressed: {}
+  keysPressed: {},
+  stars: []
 };
 
 let gameStateVariables = {
@@ -53,6 +55,7 @@ let timeToSpawnNextEnemy = 3000;
 let powerUpSpawnInterval = 30000;
 let timeToSpawnNextPowerUp = 30000;
 let reloadTime = 500;
+let starCount = 75;
 let playerScore = 0;
 let prevFrameGameClock = 0;
 let currentGameTime = 0;
@@ -60,6 +63,7 @@ let projectileList = [];
 let powerUpList = [];
 let enemyList = [];
 let keysPressed = {};
+let stars = [];
 
 // triggers game start
 startGame();
@@ -69,8 +73,22 @@ function startGame() {
   scoreBoard = new Score(GAME_WIDTH);
   gameClock = new GameClock(GAME_WIDTH);
   new InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused);
+  createStars();
 
   gameLoop();
+}
+
+function createStars() {
+  for (let i = 0; i < starCount; i++) {
+    stars.push(new Star(GAME_WIDTH, GAME_HEIGHT));
+  }
+}
+
+function renderStars() {
+  for (let i = 0; i < stars.length; i++) {
+    stars[i].draw(ctx);
+    stars[i].update();
+  }
 }
 
 //function for handling rules around bullets
@@ -100,7 +118,9 @@ function handleBullets() {
       }
       if (powerUpList.length > 0) {
         for (let j = 0; j < powerUpList.length; j++) {
-          if (checkForCollisionCircleSquare(powerUpList[0], projectileList[i])) {
+          if (
+            checkForCollisionCircleSquare(powerUpList[0], projectileList[i])
+          ) {
             powerUpList.splice(j, 1);
             reloadTime *= 0.5;
             projectileList.splice(i, 1);
@@ -131,10 +151,16 @@ function checkForCollisionWithEnemy(projectile) {
     // check vertical values first, if there is no overlap there is no point in checking x values
     let enemyY = enemyList[i].position.y;
     let projectileY = projectile.position.y;
-    if (projectileY + projectile.height > enemyY && projectileY < enemyY + enemyList[i].height) {
+    if (
+      projectileY + projectile.height > enemyY &&
+      projectileY < enemyY + enemyList[i].height
+    ) {
       let enemyX = enemyList[i].position.x;
       let projectileX = projectile.position.x;
-      if (projectileX + projectile.width > enemyX && projectileX < enemyX + enemyList[i].width) {
+      if (
+        projectileX + projectile.width > enemyX &&
+        projectileX < enemyX + enemyList[i].width
+      ) {
         // if a collision is detected, lower that enemies health by 1
         enemyList[i].takeDamage();
         // after health is lowered, check if that enemy is out of health,
@@ -270,15 +296,25 @@ function gameLoop(timestamp) {
     maybeSpawnEnemy();
     maybeSpawnPowerUp();
   }
-  // clear canvas between every render
 
-  // int for faster processing of gameclock
   timestamp = Math.floor(timestamp);
+  if (timestamp - prevFrameGameClock < 1000 / 60) {
+    requestAnimationFrame(gameLoop);
+    return;
+  }
 
   // don't do any of normal updates if game is currently paused
   if (!paused) {
+    // clear canvas between every render
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     if (timestamp) currentGameTime += timestamp - prevFrameGameClock;
+
+    // background color
+    ctx.fillStyle = "#001f3f";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // stars background
+    renderStars();
 
     // handle spaceShip updates
     spaceShip.draw(ctx);
