@@ -69,15 +69,35 @@ function startGame() {
 }
 
 function createStars() {
+  // randomly spawn some number of stars at the beginning of the game. They will cycle in and out of screen reusing the same set number
   for (let i = 0; i < starCount; i++) {
     stars.push(new Star(GAME_WIDTH, GAME_HEIGHT));
   }
 }
 
 function renderStars() {
+  // handle star movement
   for (let i = 0; i < stars.length; i++) {
     stars[i].draw(ctx);
     stars[i].update();
+  }
+}
+
+function handleMovement() {
+  // Check to see if left/right keys are being held, if so fire functions to move left/right.
+  // If nothing is held then slowly even out to 0
+  if (!currentlyPaused() && (keysPressed["ArrowLeft"] || keysPressed["KeyA"]))
+    spaceShip.moveLeft();
+
+  if (!currentlyPaused() && (keysPressed["ArrowRight"] || keysPressed["KeyD"]))
+    spaceShip.moveRight();
+
+  if (
+    !currentlyPaused() &&
+    !(keysPressed["ArrowRight"] || keysPressed["KeyD"]) &&
+    !(keysPressed["ArrowLeft"] || keysPressed["KeyA"])
+  ) {
+    spaceShip.stabilize();
   }
 }
 
@@ -287,6 +307,8 @@ function gameLoop(timestamp) {
     maybeSpawnPowerUp();
   }
 
+  // Cap the game at 60 fps. If it hasn't been long enough then don't request the next frame.
+  // This solves an issue where a fast PC plays the game at ludicrous speed
   timestamp = Math.floor(timestamp);
   if (timestamp - prevFrameGameClock < 1000 / 60) {
     requestAnimationFrame(gameLoop);
@@ -307,6 +329,7 @@ function gameLoop(timestamp) {
     renderStars();
 
     // handle spaceShip updates
+    handleMovement();
     spaceShip.draw(ctx);
     spaceShip.update();
 
