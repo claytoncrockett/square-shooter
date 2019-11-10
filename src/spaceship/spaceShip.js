@@ -72,6 +72,8 @@ export default class SpaceShip {
     } else {
       this.velocityX -= 0.17;
     }
+    if (this.frameIndex < 2) this.frameIndex++;
+    else if (this.frameIndex > 2) this.frameIndex--;
   }
 
   takeDamage() {
