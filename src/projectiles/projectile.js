@@ -14,11 +14,18 @@ export default class Projectile {
   }
 
   draw(ctx) {
+    // Save canvas state before rotating so we can revert after
     ctx.save();
+
+    // Move canvas translation to be focused on square
     ctx.translate(this.position.x, this.position.y);
     ctx.rotate(this.rotation);
     ctx.fillStyle = "#b3194a";
+
+    // Find top left corner of square from center, then draw square starting from there
     ctx.fillRect(this.width / -2, this.height / -2, this.width, this.height);
+
+    // revert canvas state after rotation
     ctx.restore();
   }
 
