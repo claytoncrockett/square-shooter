@@ -21,7 +21,6 @@ let spaceShip;
 let startingGameTime;
 let scoreBoard;
 let gameClock;
-let shootingAllowed;
 let paused;
 let enemySpawnInterval;
 let timeToSpawnNextEnemy;
@@ -38,6 +37,7 @@ let enemyList;
 let keysPressed;
 let stars;
 let canPause;
+let lastShotFired;
 
 // triggers game start
 
@@ -45,7 +45,6 @@ startGame();
 // start the game
 function startGame() {
   startingGameTime;
-  shootingAllowed = true;
   canPause = true;
   paused = false;
   enemySpawnInterval = 5000;
@@ -57,6 +56,7 @@ function startGame() {
   playerScore = 0;
   prevFrameGameClock = 0;
   currentGameTime = 0;
+  lastShotFired = 0;
   projectileList = [];
   powerUpList = [];
   enemyList = [];
@@ -105,17 +105,14 @@ function handleMovement() {
 }
 
 //function for handling rules around bullets
-function handleBullets() {
+function handleBullets(currentGameTime) {
   // Listen for if space key is held down instead of key down event
   // this solves a bug where shooting will stop when moving while holding space
   if (keysPressed["Space"]) {
     // only allow shots when reload time is finished
-    if (shootingAllowed) {
+    if (currentGameTime - lastShotFired > reloadTime) {
       shootProjectile();
-      shootingAllowed = false;
-      setTimeout(() => {
-        shootingAllowed = true;
-      }, reloadTime);
+      lastShotFired = currentGameTime;
     }
   }
 
@@ -348,7 +345,7 @@ function gameLoop(timestamp) {
     spaceShip.update();
 
     // handle bullet updates
-    handleBullets();
+    handleBullets(currentGameTime);
 
     // handle enemy updates
     handleEnemies();
