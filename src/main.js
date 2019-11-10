@@ -16,7 +16,7 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const FASTEST_BASIC_ENEMY_SPAWN_RATE = 1000;
 
-// game variables
+// game variables in global scope
 let spaceShip;
 let startingGameTime;
 let scoreBoard;
@@ -37,13 +37,16 @@ let powerUpList;
 let enemyList;
 let keysPressed;
 let stars;
+let canPause;
 
 // triggers game start
+
 startGame();
 // start the game
 function startGame() {
   startingGameTime;
   shootingAllowed = true;
+  canPause = true;
   paused = false;
   enemySpawnInterval = 5000;
   timeToSpawnNextEnemy = 3000;
@@ -62,7 +65,7 @@ function startGame() {
   spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT, gameOver);
   scoreBoard = new Score(GAME_WIDTH);
   gameClock = new GameClock(GAME_WIDTH);
-  new InputHandler(spaceShip, keysPressed, pauseGame, currentlyPaused);
+  new InputHandler(keysPressed, pauseGame);
   createStars();
 
   gameLoop();
@@ -191,19 +194,24 @@ function checkForCollisionWithEnemy(projectile) {
 function checkForCollisionCircleSquare(circle, square) {
   const squareTop = square.position.y;
   const squareBottom = squareTop + square.height;
+
   const circleCenterY = circle.position.y;
   const circleTop = circleCenterY - circle.radius;
   const circleBottom = circleCenterY + circle.radius;
+
   if (squareBottom > circleTop && squareTop < circleBottom) {
     const circleCenterX = circle.position.x;
     const circleLeft = circleCenterX - circle.radius;
     const circleRight = circleCenterX + circle.radius;
+
     const squareLeft = square.position.x;
     const squareRight = square.position.x + square.width;
+
     if (squareLeft < circleRight && squareRight > circleLeft) {
       return true;
     }
   }
+
   return false;
 }
 
@@ -289,7 +297,13 @@ function gameOver() {
 
 // call to toggle paused state
 function pauseGame() {
-  paused = !paused;
+  if (canPause) {
+    paused = !paused;
+    canPause = false;
+    setTimeout(() => {
+      canPause = true;
+    }, 250);
+  }
 }
 
 // check if game is currently paused, use to give objects knowledge of pause state
