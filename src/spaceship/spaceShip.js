@@ -1,5 +1,3 @@
-// import spaceShipSprite from "./spaceShipSprite";
-
 export default class SpaceShip {
   constructor(gameWidth, gameHeight, gameOver) {
     this.gameWidth = gameWidth;
@@ -48,29 +46,37 @@ export default class SpaceShip {
   }
 
   moveLeft() {
+    // change velocity by acceleration
     if (this.position.x > 0) {
       this.velocityX -= this.accelerationX;
     }
+    // Move sprite sheet frame left to show left turning ship
     if (this.frameIndex > 0) {
       this.frameIndex--;
     }
   }
   moveRight() {
+    // change velocity by acceleration
     if (this.position.x < this.gameWidth - this.width) {
       this.velocityX += this.accelerationX;
     }
+    // Move sprite sheet right to show right turning ship
     if (this.frameIndex < 4) {
       this.frameIndex++;
     }
   }
 
   stabilize() {
-    if (this.velocityX > -0.35 && this.velocityX < 0.35) {
+    // If the user is not moving left or right, slow the ship to a stop
+    if (
+      this.velocityX > -this.accelerationX &&
+      this.velocityX < this.accelerationX
+    ) {
       this.velocityX = 0;
-    } else if (this.velocityX <= 0.35) {
-      this.velocityX += 0.17;
+    } else if (this.velocityX <= this.accelerationX) {
+      this.velocityX += this.accelerationX / 3;
     } else {
-      this.velocityX -= 0.17;
+      this.velocityX -= this.accelerationX / 3;
     }
     if (this.frameIndex < 2) this.frameIndex++;
     else if (this.frameIndex > 2) this.frameIndex--;
