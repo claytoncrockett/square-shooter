@@ -5,6 +5,7 @@ export default class Projectile {
     this.initialX = spaceShip.position.x + spaceShip.width / 2 - this.width / 2;
     this.initialY = spaceShip.position.y - this.height / 2;
     this.velocity = 8;
+    this.rotation = 0;
 
     this.position = {
       x: this.initialX,
@@ -13,11 +14,16 @@ export default class Projectile {
   }
 
   draw(ctx) {
+    ctx.save();
+    ctx.translate(this.position.x, this.position.y);
+    ctx.rotate(this.rotation);
     ctx.fillStyle = "#b3194a";
-    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+    ctx.fillRect(this.width / -2, this.height / -2, this.width, this.height);
+    ctx.restore();
   }
 
   update() {
     this.position.y -= this.velocity;
+    this.rotation += (8 * Math.PI) / 180;
   }
 }
