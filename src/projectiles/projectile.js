@@ -2,7 +2,7 @@ export default class Projectile {
   constructor(spaceShip) {
     this.width = 10;
     this.height = 10;
-    this.initialX = spaceShip.position.x + spaceShip.width / 2 - this.width / 2;
+    this.initialX = spaceShip.position.x + spaceShip.width / 2;
     this.initialY = spaceShip.position.y - this.height / 2;
     this.velocity = 8;
     this.rotation = 0;
