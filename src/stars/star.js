@@ -5,7 +5,7 @@ export default class Star {
     this.radius = Math.floor(Math.random() * 4);
     this.initialX = Math.floor(Math.random() * (gameWidth - this.radius));
     this.initialY = Math.floor(Math.random() * (gameHeight - this.radius));
-    this.verticalVelocity = 2;
+    this.verticalVelocity = -2;
 
     this.position = {
       x: this.initialX,
@@ -21,8 +21,8 @@ export default class Star {
   }
 
   update() {
-    if (this.position.y < 0) {
-      this.position.y = this.gameHeight;
+    if (this.position.y > this.gameHeight) {
+      this.position.y = -1;
     } else {
       this.position.y -= this.verticalVelocity;
     }
