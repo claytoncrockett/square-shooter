@@ -3,6 +3,7 @@ import InputHandler from "/src/input/input";
 import Projectile from "/src/projectiles/projectile";
 import Enemy from "/src/enemies/enemy";
 import Score from "/src/interface/score";
+import Health from "/src/interface/health";
 import PowerUp from "/src/powerups/powerup";
 import GameClock from "/src/interface/gameClock";
 import Star from "./stars/star";
@@ -38,6 +39,8 @@ let keysPressed;
 let stars;
 let canPause;
 let lastShotFired;
+let healthDisplay;
+let currentHealth;
 
 // triggers game start
 
@@ -57,14 +60,16 @@ function startGame() {
   prevFrameGameClock = 0;
   currentGameTime = 0;
   lastShotFired = 0;
+  currentHealth = 3;
   projectileList = [];
   powerUpList = [];
   enemyList = [];
   keysPressed = {};
   stars = [];
-  spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT, gameOver);
+  spaceShip = new SpaceShip(GAME_WIDTH, GAME_HEIGHT);
   scoreBoard = new Score(GAME_WIDTH);
   gameClock = new GameClock(GAME_WIDTH);
+  healthDisplay = new Health(GAME_WIDTH, currentHealth, gameOver)
   new InputHandler(keysPressed, pauseGame);
   createStars();
 
@@ -220,7 +225,7 @@ function handleEnemies() {
     for (let i = 0; i < enemyList.length; i++) {
       if (enemyList[i].position.y > GAME_HEIGHT) {
         enemyList.splice(i, 1);
-        spaceShip.takeDamage();
+        takeDamage();
         i--;
         continue;
       }
@@ -286,6 +291,11 @@ let spawnEnemy = () => {
 let spawnPowerUp = () => {
   powerUpList.push(new PowerUp(GAME_WIDTH));
 };
+
+function takeDamage() {
+  currentHealth--;
+  if (currentHealth === 0) gameOver();
+}
 
 // trigger when game ending condition happens
 function gameOver() {
@@ -357,6 +367,9 @@ function gameLoop(timestamp) {
     // will appear above the other objects passing through it
     scoreBoard.update(playerScore);
     scoreBoard.draw(ctx);
+
+    healthDisplay.update(currentHealth);
+    healthDisplay.draw(ctx);
 
     // update game clock, also put this below enemies/projectiles and things so it
     // basically has the highest z index

@@ -1,8 +1,7 @@
 export default class SpaceShip {
-  constructor(gameWidth, gameHeight, gameOver) {
+  constructor(gameWidth, gameHeight) {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
-    this.gameOver = gameOver;
     this.image = document.getElementById("spaceShipSprite");
     this.width = 66;
     this.height = 60;
@@ -10,7 +9,6 @@ export default class SpaceShip {
     this.initialY = gameHeight - this.height - 10;
     this.velocityX = 0;
     this.accelerationX = 0.35;
-    this.health = 3;
     this.frameIndex = 2;
     this.numberOfFrames = 5;
 
@@ -25,12 +23,9 @@ export default class SpaceShip {
       width,
       height,
       position: { x, y },
-      numberOfFrames,
       frameIndex,
       image
     } = this;
-    // ctx.fillStyle = "#00f";
-    // ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
 
     ctx.drawImage(
       image,
@@ -82,10 +77,6 @@ export default class SpaceShip {
     else if (this.frameIndex > 2) this.frameIndex--;
   }
 
-  takeDamage() {
-    this.health--;
-    if (this.health === 0) this.gameOver();
-  }
 
   resetPosition() {
     this.position = {
