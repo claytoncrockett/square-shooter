@@ -5,7 +5,7 @@ export default class Star {
     this.radius = Math.floor(Math.random() * 4);
     this.initialX = Math.floor(Math.random() * (gameWidth - this.radius));
     this.initialY = Math.floor(Math.random() * (gameHeight - this.radius));
-    this.verticalVelocity = -2;
+    this.verticalVelocity = -1;
 
     this.position = {
       x: this.initialX,
